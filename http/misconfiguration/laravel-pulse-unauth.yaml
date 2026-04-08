@@ -1,0 +1,46 @@
+id: laravel-pulse-unauth
+
+info:
+  name: Laravel Pulse - Unauthenticated Dashboard Access
+  author: moamenbasel
+  severity: medium
+  description: |
+    Laravel Pulse monitoring dashboard is accessible without authentication. Pulse exposes real-time application performance metrics including slow queries, slow requests, cache statistics, queue throughput, server resource usage, and active user sessions. This information aids attackers in profiling the application infrastructure.
+  remediation: |
+    Configure the Pulse gate in the PulseServiceProvider to restrict access to authorized users. Ensure the authorize method in app/Providers/PulseServiceProvider.php validates authentication properly.
+  reference:
+    - https://laravel.com/docs/11.x/pulse#dashboard-authorization
+    - https://github.com/laravel/pulse
+  classification:
+    cvss-metrics: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+    cvss-score: 5.3
+    cwe-id: CWE-200
+  metadata:
+    verified: true
+    max-request: 1
+  tags: laravel,pulse,unauth,dashboard,misconfig,vuln
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/pulse"
+
+    host-redirects: true
+
+    matchers-condition: and
+    matchers:
+      - type: word
+        part: body
+        words:
+          - "Laravel Pulse"
+          - "livewire"
+        condition: and
+
+      - type: word
+        part: header
+        words:
+          - "text/html"
+
+      - type: status
+        status:
+          - 200

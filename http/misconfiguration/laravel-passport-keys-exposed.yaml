@@ -1,0 +1,46 @@
+id: laravel-passport-keys-exposed
+
+info:
+  name: Laravel Passport - OAuth2 Private Key Exposure
+  author: moamenbasel
+  severity: high
+  description: |
+    Laravel Passport OAuth2 RSA keys are publicly accessible at their default storage paths. An attacker with access to the private key can forge valid access tokens and impersonate any user or client in the application.
+  remediation: |
+    Restrict web server access to the storage directory. Move Passport keys outside the web root or use the PASSPORT_PRIVATE_KEY and PASSPORT_PUBLIC_KEY environment variables instead of file-based keys.
+  reference:
+    - https://laravel.com/docs/10.x/passport#installation
+    - https://github.com/laravel/passport
+  classification:
+    cvss-metrics: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+    cvss-score: 9.1
+    cwe-id: CWE-312
+  metadata:
+    verified: true
+    max-request: 2
+  tags: laravel,passport,oauth,exposure,keys,vuln
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/storage/oauth-private.key"
+      - "{{BaseURL}}/storage/oauth-public.key"
+
+    stop-at-first-match: true
+
+    matchers-condition: and
+    matchers:
+      - type: word
+        part: body
+        words:
+          - "-----BEGIN RSA PRIVATE KEY-----"
+          - "-----BEGIN PUBLIC KEY-----"
+        condition: or
+
+      - type: dsl
+        dsl:
+          - "!contains(tolower(content_type), 'text/html')"
+
+      - type: status
+        status:
+          - 200

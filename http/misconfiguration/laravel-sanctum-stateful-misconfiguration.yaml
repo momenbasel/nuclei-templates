@@ -1,0 +1,47 @@
+id: laravel-sanctum-stateful-misconfiguration
+
+info:
+  name: Laravel Sanctum - Stateful Domain Misconfiguration
+  author: moamenbasel
+  severity: medium
+  description: |
+    Laravel Sanctum's stateful domain configuration appears overly permissive. The CSRF cookie endpoint responds with a valid XSRF-TOKEN to requests from arbitrary origins, indicating that the SANCTUM_STATEFUL_DOMAINS setting may include wildcard or overly broad domains. This can allow CSRF-free API access from unintended origins.
+  remediation: |
+    Configure SANCTUM_STATEFUL_DOMAINS in the .env file to include only the exact frontend domains that need stateful authentication. Avoid wildcard entries and ensure CORS settings align with stateful domains.
+  reference:
+    - https://laravel.com/docs/10.x/sanctum#spa-authentication
+    - https://laravel.com/docs/10.x/sanctum#cors-and-cookies
+  classification:
+    cvss-metrics: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+    cvss-score: 5.4
+    cwe-id: CWE-346
+  metadata:
+    verified: true
+    max-request: 1
+  tags: laravel,sanctum,csrf,misconfig,vuln
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/sanctum/csrf-cookie"
+
+    headers:
+      Origin: "https://evil-origin.example.com"
+      Referer: "https://evil-origin.example.com/"
+
+    matchers-condition: and
+    matchers:
+      - type: word
+        part: header
+        words:
+          - "XSRF-TOKEN"
+
+      - type: word
+        part: header
+        words:
+          - "evil-origin.example.com"
+
+      - type: status
+        status:
+          - 204
+          - 200
